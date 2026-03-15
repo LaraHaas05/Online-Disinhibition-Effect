@@ -1,42 +1,34 @@
-# This CITATION.cff file was generated with cffinit.
-# Visit https://bit.ly/cffinit to generate yours today!
-
 cff-version: 1.2.0
-title: 'Online Disinhibition Effect: A formal model'
-message: >-
-  If you refer to this model, please cite it using the
-  metadata from this file. This theory has not been peer
-  reviewed yet.
+title: "Formalization of a Partial Model of the Online Disinhibition Effect"
+message: "If you use this repository, please cite it using the metadata from this file."
 type: software
+
 authors:
-  - given-names: Martje
-    family-names: Buss
-    affiliation: Ludwig-Maximilians-Universität München
-    orcid: 'https://orcid.org/0000-0002-4190-0086'
-    email: martje.buss@psy.lmu.de
-  - given-names: Lara
-    family-names: Haas
-    email: lara.haas@campus.lmu.de
-    affiliation: Ludwig-Maximilians-Universität München
-  - given-names: 'Sofia '
-    family-names: Luchiean
-    email: sofia.luchiean@campus.lmu.de
-    affiliation: Ludwig-Maximilians-Universität München
-    orcid: 'https://orcid.org/0009-0009-6715-6097'
-  - given-names: Amelie
-    family-names: Schlieben
-    email: schlieben.am@campus.lmu.de
-    affiliation: Ludwig-Maximilians-Universität München
-repository-code: >-
-  https://github.com/amelieschlieben/Online-Disinhibition-Effect
-abstract: >-
-  A formal model that explains why individuals often behave
-  more intensely in online environments compared to
-  face-to-face situations
+  - given-names: "Lara"
+    family-names: "Haas"
+    affiliation: "Ludwig-Maximilians-Universität München"
+
+repository-code: "https://github.com/DEIN-USERNAME/DEIN-REPO-NAME"
+
+abstract: >
+  This repository contains the Quarto manuscript, simulation code, figures,
+  appendix materials, and supporting files for a final report on the
+  formalization of a partial model of Suler's (2004) Online Disinhibition
+  Effect. The formalization focuses on dissociative anonymity, invisibility,
+  and their downstream effects on state disinhibition and an observable
+  behavioral indicator (Curse). The repository also includes an individual
+  robustness-oriented extension based on an assumption tournament and
+  UTOS-in-code scenario variation.
+
 keywords:
-  - online behavior
-  - formal theory
-  - computer-mediated communication
-license: CC-BY-4.0
-version: 0.3.1
-date-released: '2025-12-12'
+  - online disinhibition effect
+  - formalization
+  - formal model
+  - psychological theory
+  - simulation
+  - Quarto
+  - R
+
+license: "CC-BY-4.0"
+version: "1.0.0"
+date-released: "2026-03-15"

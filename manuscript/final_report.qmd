@@ -1,0 +1,587 @@
+---
+title: "Formalisiertes Teilmodell des Online-Disinhibition-Effekts nach Suler (2004)"
+author: "Matrikelnummer: 12803211"
+date: "2026-03-17"
+format:
+  pdf:
+    toc: false
+bibliography: references.bib
+csl: apa.csl
+cite-method: citeproc
+editor: visual
+execute:
+  echo: false
+  warning: false
+  message: false
+header-includes:
+  - \usepackage{subcaption}
+  - \usepackage{float}
+  - \captionsetup[subfigure]{font=small}
+  - \usepackage{pdflscape}
+---
+
+```{r}
+#| label: setup-simulation
+#| include: false
+#| message: false
+#| warning: false
+
+library(dplyr)
+library(ggplot2)
+library(multcomp)
+
+source("../simulation/01-functions.R")
+
+run_grid_sim <- function(n, seed = 123) {
+  set.seed(seed)
+
+  grid <- expand.grid(
+    anonymity = c(0, 0.5, 1),
+    cues      = c(0, 0.5, 1)
+  )
+
+  reps <- floor(n / nrow(grid))
+  df <- grid[rep(seq_len(nrow(grid)), each = reps), ]
+  if (nrow(df) < n) df <- rbind(df, grid[seq_len(n - nrow(df)), ])
+
+  df$MOD <- stats::rbeta(nrow(df), 4, 4) * 4 + 1
+  df$base_resp <- stats::rbeta(nrow(df), 4, 1.5)
+
+  df$IC <- IC_function(df$anonymity)
+  df$FR <- FR_function(df$IC, df$base_resp)
+  df$CAI <- CAI_function(df$cues)
+  df$CE  <- CE_function(df$CAI)
+  df$StateDis <- SD_function(df$FR, df$CE, df$MOD)
+
+  df$bad_sentence_percentage <- curse_function(
+    anonymity = df$anonymity,
+    cues      = df$cues,
+    MOD       = df$MOD,
+    base_resp = df$base_resp
+  )
+
+  df
+}
+
+plot_interaction <- function(df, title = NULL) {
+  summ <- df %>%
+    group_by(anonymity, cues) %>%
+    summarise(
+      m = mean(bad_sentence_percentage),
+      se = sd(bad_sentence_percentage) / sqrt(n()),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      ci_low  = m - 1.96 * se,
+      ci_high = m + 1.96 * se,
+      cues_f  = factor(cues)
+    )
+
+  ggplot(summ, aes(x = anonymity, y = m, group = cues_f,
+                   linetype = cues_f, shape = cues_f)) +
+    geom_line() +
+    geom_point(size = 2) +
+    geom_errorbar(aes(ymin = ci_low, ymax = ci_high), width = 0.03) +
+    theme_bw() +
+    labs(
+      title = title,
+      x = "anonymity (AN)",
+      y = "Curse (bad_sentence_percentage)",
+      linetype = "NIC/cues",
+      shape = "NIC/cues"
+    )
+}
+```
+
+## Zielsetzung
+
+Ziel dieser Arbeit ist die exemplarische Formalisierung einer psychologischen Theorie zum Online-Disinhibition-Effekt nach Suler (@suler2004). Ausgehend von einem fokussierten Ausschnitt der Theorie werden zentrale Konstrukte identifiziert, in einem VAST-Modell strukturiert und anschließend in ein formales Modell mit expliziten funktionalen Beziehungen überführt. Im Anschluss wird geprüft, ob das formale Modell das Zielphänomen — stärkeres disinhibiertes Verhalten bei hoher Dissociative Anonymity und hoher Invisibility (bzw. geringer Hinweisreiz-Dichte) — in einer Simulation reproduziert. Der Schwerpunkt liegt auf der methodisch korrekten Anwendung der Formalisierungsschritte und der Transparenz getroffener Modellannahmen, nicht auf einer vollständigen Abdeckung der Gesamttheorie.
+
+## Kurze verbale Einführung in die Theorie (Suler)
+
+Suler beschreibt Online-Disinhibition als Ergebnis spezifischer Eigenschaften computervermittelter Kommunikation, die Hemmmechanismen reduzieren und dadurch sowohl toxische als auch benigne Formen disinhibierten Verhaltens begünstigen können (@suler2004). In seinem Modell werden mehrere Merkmale des Cyberspace (u. a. dissociative anonymity, invisibility, asynchrony, solipsistic introjection, dissociative imagination sowie minimization of status and authority) als Auslöser nachgelagerter kognitiver und sozialer Prozesse verstanden, die die Selbstregulation im Online-Kontext verändern. Das in dieser Arbeit formal spezifizierte Teilmodell fokussiert auf Dissociative Anonymity (DisAn) und Invisibility (Inv) und beschreibt, wie diese Kontextbedingungen über vermittelnde Prozesse zu erhöhter momentaner Disinhibition führen und sich in beobachtbarem Online-Verhalten ausdrücken.
+
+## Zentrale Konstrukte der Theorie (im VAST-Modell)
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{../doc/Online_Disinhibition_Effect_VAST.png}
+\caption{VAST-Display des fokussierten Teilmodells des Online-Disinhibition-Effekts.}
+\label{fig:vast}
+\end{figure}
+
+Im VAST-Modell werden zwei Eigenschaften des Cyberspace nach Suler als exogene Kontextvariablen (Inputs) modelliert: Dissociative Anonymity (DisAn) und Invisibility (Inv). DisAn wird über die Variable AN operationalisiert und ist mit stärkerer Identity compartmentalization (IC) sowie geringerem Erleben von Felt responsibility (FR) verknüpft. Inv wird über die Variable NIC (number of interpersonal cues; niedrige NIC-Werte entsprechen hoher Invisibility) operationalisiert und beeinflusst soziale Bewertungs- und Ausdrucksprozesse, konkret Concern about impression on others (CAI) und Courage to express oneself (CE). Zusätzlich wird MOD als exogene Dispositionsvariable berücksichtigt (vgl. [@stuart_scott2021]), die gemeinsam mit FR und CE zur Erklärung von State Disinhibition (StateDis) beiträgt. Disinhibiertes Verhalten wird exemplarisch über den Schimpfwortanteil (Curse, Anteil von Sätzen mit mindestens einem Schimpfwort) operationalisiert. Detaillierte Definitionen, Quellenzitate und Verknüpfungs-IDs sind in Appendix A (Construct Source Table) dokumentiert.
+
+### Eingrenzung des Scopes und Begründung
+
+Die Formalisierung konzentriert sich auf Dissociative Anonymity und Invisibility, da beide Mechanismen im Originalartikel als zentrale Erklärungsbausteine des Online-Disinhibition-Effekts beschrieben werden. Anonymität wird von Suler ausdrücklich als einer der „principal factors“ hervorgehoben, weil sie die Trennung zwischen Online-Handlung und Offline-Identität erleichtert und damit Vulnerabilität bei Selbstoffenbarung oder normabweichendem Verhalten reduziert (Stichwort „compartmentalized self“) (@suler2004). Invisibility wird als wesentlicher Mechanismus dargestellt, weil fehlender Blickkontakt sowie der Wegfall nonverbaler Rückmeldesignale (z. B. missbilligende Mimik/Gesten) soziale Hemmungen senken und Ausdrucksbereitschaft erhöhen können (@suler2004).
+
+Beide Faktoren lassen sich zudem in klar definierte, modellierbare Größen überführen: Dissociative Anonymity über den Grad der (Nicht-)Identifizierbarkeit; „volle“ Anonymität liegt dort vor, wo Nutzer\*innen auch nach Abschluss der Interaktion nicht zuordenbar bleiben (@christie_dill2016). Invisibility wird über die Anzahl interpersonaler Hinweisreize operationalisiert (cue-arme textbasierte Umgebungen vs. cue-reiche Settings mit Audio/Video und nonverbalem Feedback) (@suler2004). Auf dieser Grundlage wird im Folgenden eine theoriegeleitete Prozesskette formal spezifiziert, die Kontextbedingungen, vermittelnde Mechanismen sowie momentane Disinhibition und ein beobachtbares Verhaltensmaß verbindet.
+
+Die vollständige Construct Source Table befindet sich in Appendix A. Die Variable Table sowie die Relationships Table sind in Appendix B bzw. Appendix C dokumentiert.
+
+## Phänomen und Robustheit
+
+### Phänomen
+
+Das zu erklärende Phänomen lautet: Bei hoher Dissociative Anonymity und hoher Invisibility tritt mehr Online-Disinhibition auf als bei niedriger Ausprägung dieser Kontextbedingungen.
+
+### Hypothesen
+
+Aus dem fokussierten Teilmodell (Abbildung \ref{fig:vast}) ergeben sich folgende prüfbare Erwartungen für den Outcome-Indikator *Curse* (Schimpfwortanteil). Dabei entspricht **NIC/cues** der Anzahl interpersonaler Hinweisreize (hohe Werte = geringe Invisibility; niedrige Werte = hohe Invisibility).
+
+**H1 (Haupteffekt Anonymität).** Höhere Anonymität (AN) geht mit höherem *Curse* einher.
+
+**H2 (Haupteffekt Hinweisreiz-Dichte / Invisibility).** Höhere Hinweisreiz-Dichte (NIC/cues) geht mit niedrigerem *Curse* einher (d.h. hohe Invisibility = niedrige NIC/cues → höherer *Curse*).
+
+**H3 (Interaktion).** Der positive Effekt von AN auf *Curse* ist stärker, wenn NIC/cues niedrig ist (hohe Invisibility). Formal entspricht dies einem negativen Interaktionsterm AN × NIC/cues.
+
+Zusätzlich ergeben sich gerichtete Erwartungen auf Ebene der Disinhibition (StateDis): (a) **MOD** hat einen positiven Zusammenhang mit StateDis, (b) **base_resp** steht in einem negativen Zusammenhang mit StateDis (über FR).
+
+### Evidenzbasis und Stärke der Evidenz
+
+Als Evidenzbasis wird eine Meta-Analyse zu benigner Disinhibition (Selbstoffenbarung) sowie eine experimentelle Primärstudie zu toxischer Disinhibition (Flaming) herangezogen. Clark-Gordon et al. berichten in einer Random-Effects-Meta-Analyse (k = 14) einen positiven mittleren Zusammenhang zwischen Online-Anonymität und Selbstoffenbarung (r = .184, 95% CI \[.04, .33\]). Gleichzeitig ist die Variation der Effekte über die Studien hinweg sehr hoch (I² = 92.79%, Q(13) = 180.22, p \< .001). Geprüfte Moderatoren (visuelle vs. diskursive Anonymität, Messmethode der Selbstoffenbarung sowie Interaktionskontext) konnten die Heterogenität nicht erklären; Hinweise auf Publikationsbias ergaben sich nicht (Egger p = .60) [@clarkgordon2019]. Für die vorliegende Fragestellung ist damit vor allem die Richtung des Zusammenhangs informativ, während die genaue Effektgröße als deutlich kontext- und operationalisierungsabhängig eingeschätzt werden muss.
+
+Ergänzend untersuchten Lapidot-Lefler & Barak (N = 142) in einem 2×2×2-Experiment (Anonymität × (In)visibility × (kein) Eye-Contact) toxische Online-Disinhibition anhand mehrerer Flaming-Indikatoren. In der univariaten Auswertung zeigten sich Effekte einzelner Online-Faktoren auf spezifische Indikatoren, etwa Anonymität auf “threats” (F = 2.87, g² = .02) sowie Invisibility auf negative Atmosphäre (F = 3.76, g² = .03). Gleichzeitig war in diesem Design das Ausbleiben von Eye-Contact der stärkste Einflussfaktor (z. B. self-reported flaming: F = 5.92, g² = .04), was verdeutlicht, dass disinhibitionsbezogene Outcomes nicht von einem einzelnen Online-Merkmal bestimmt werden, sondern von konkreten Cue-Konfigurationen und dem jeweiligen Outcome abhängen [@lapidot2012].
+
+Ein systematischer Review zu Cyberbullying bei Jugendlichen (15 Studien) berichtet konsistent positive Zusammenhänge zwischen wahrgenommener Online-Disinhibition und Cyberbullying, findet jedoch für die spezifische Facette Anonymität inkonsistente Befunde (6/7 Studien) und für Invisibility in der begrenzten Evidenzlage keinen Effekt auf Cyberbullying (als aggressionsnahes Outcome) [@wang2024].
+
+### Generalisierbarkeit (UTOS)
+
+Hinsichtlich der Generalisierbarkeit ergibt sich ein gemischtes Bild. Units: Die Meta-Analyse integriert Studien aus der CMC-Forschung mit unterschiedlichen Stichproben, während experimentelle Evidenz häufig auf Convenience Samples basiert; im Experiment von Lapidot-Lefler & Barak wurden Studierende im Alter von 18–34 Jahren untersucht, wodurch Aussagen über andere Altersgruppen oder Kontexte nur eingeschränkt möglich sind [@lapidot2012]. Treatments: In der Meta-Analyse wird „Anonymität“ nicht einheitlich operationalisiert, sondern umfasst visuelle, diskursive oder kombinierte Formen; in experimentellen Designs werden Anonymität (Alias vs. Identifikatoren) und Invisibility (z. B. Webcam vs. keine Webcam) gezielt manipuliert [@clarkgordon2019; @lapidot2012]. Outcomes: Die Evidenz betrifft unterschiedliche Manifestationen von Disinhibition: Clark-Gordon et al. fokussieren Selbstoffenbarung als benigne Disinhibition, während Lapidot-Lefler & Barak toxische Disinhibition über Flaming-Indikatoren (Selbstbericht, Expertenratings, Textanalyse) erfassen. Dadurch ist die Vergleichbarkeit über Outcome-Klassen begrenzt, zugleich spricht die Breite der Outcomes dafür, dass der Online-Kontext über verschiedene Verhaltensdomänen hinweg relevant sein kann [@clarkgordon2019; @lapidot2012]. Settings: Die untersuchten Kommunikationssituationen reichen von unterschiedlichen computervermittelten Interaktionen bis zu kontrollierten Chat-Experimenten mit Aufgaben-/Dilemma-Kontext; damit sind Effekte prinzipiell über mehrere Online-Settings plausibel, aber Normen, Moderation und konkrete Plattformbedingungen können die Stärke der Effekte beeinflussen [@clarkgordon2019; @lapidot2012].
+
+### Fazit
+
+Das Phänomen kann als **eingeschränkt robust** betrachtet werden, weil meta-analytisch ein kleiner positiver Zusammenhang zwischen Anonymität und benigner Disinhibition vorliegt (\(r = .184\)), die Evidenz jedoch durch sehr hohe, nicht erklärte Heterogenität sowie durch Unterschiede zwischen Outcome-Klassen und Cue-Operationalisierungen deutlich eingeschränkt ist [@clarkgordon2019; @lapidot2012; @wang2024].
+
+## Formulierung der (Proto-)Theorie
+
+Ausgehend vom VAST-Display wird angenommen, dass Dissociative Anonymity als Kontextmerkmal des Cyberspace über Anonymity (AN) operationalisiert werden kann und die Trennung von Online-Handeln und Offline-Identität (*Identity compartmentalization*) begünstigt (B4/B2). Dadurch sinkt das Erleben persönlicher Verantwortlichkeit (*Felt Responsibility*; B3).
+
+Parallel dazu wird Invisibility über die Anzahl interpersonaler Hinweisreize (NIC) operationalisiert, wobei hohe Invisibility niedrigen NIC-Werten entspricht (C1/E). Im Modell gehen mehr Hinweisreize mit höherer Sorge um den Eindruck bei anderen (*Concern about impression on others*, CAI; D) einher, was die Ausdrucksbereitschaft (*Courage to express oneself*, CE; F) reduziert. Eine cue-arme Kommunikationssituation führt entsprechend zu geringerer CAI und höherer CE.
+
+Beide Pfade wirken gemeinsam auf State Disinhibition als situative Tendenz zu enthemmtem Online-Verhalten (A). Zusätzlich wird MOD als exogene Dispositionsvariable berücksichtigt, die interindividuelle Unterschiede in der allgemeinen Disinhibitionstendenz abbildet (G). Als beobachtbarer Verhaltensindikator wird in dieser Arbeit exemplarisch der Schimpfwortanteil (Curse) verwendet (H).
+
+Im nächsten Schritt wird diese prototheoretische Prozesskette in ein formales Modell überführt. Dazu werden die gerichteten Beziehungen als Funktionen spezifiziert; wo die Originalliteratur keine eindeutige Funktionsform vorgibt, werden zusätzliche Modellannahmen explizit gemacht und begründet.
+
+## Entwicklung eines formalen Modells
+
+Ziel der formalen Modellierung ist es, die im VAST dargestellten gerichteten Zusammenhänge als explizite Funktionen zu spezifizieren, um das Verhalten des Gesamtsystems (\(\psi\)) simulieren zu können. Für jede endogene Variable wird daher eine Rechenvorschrift definiert, die alle eingehenden Pfeile als Input verwendet (vgl. Relationship Table, Appendix C). Wo Suler (2004) keine eindeutige funktionale Form vorgibt, werden zusätzliche Modellannahmen so gewählt, dass sie die im VAST dargestellte Wirkungsrichtung abbilden, die definierten Wertebereiche respektieren (Appendix B) und für Simulationen numerisch stabil sind.
+
+### Theoriegeleitete Teilbeziehungen (Invisibility-Zweig)
+
+Entsprechend der Operationalisierung von Invisibility über die Anzahl interpersonaler Hinweisreize (**NIC**; E) wird *Concern about impression on others* (**CAI**) direkt durch NIC modelliert:
+
+$$
+\text{CAI} = \text{NIC}
+$$
+
+Aufbauend darauf wird *Courage to express oneself* (**CE**) als inverser Zusammenhang zu CAI modelliert:
+
+$$
+\text{CE} = 1 - \text{CAI}
+$$
+
+Damit wird formal umgesetzt, dass mehr Hinweisreize zu höherer CAI führen (D) und höhere CAI die Ausdrucksbereitschaft reduziert (F).
+
+### Modellannahmen zur Formalisierung des Anonymity-Zweigs
+
+Für den Dissociative-Anonymity-Zweig beschreibt Suler den Mechanismus inhaltlich (Trennung von Online- und Offline-Selbst → *Identity compartmentalization*; B2) und die Folgewirkung auf Verantwortlichkeit (B3), spezifiziert jedoch keine Funktionsform. Um dennoch eine graduelle, nichtlineare Zunahme von *Identity compartmentalization* (**IC**) mit steigender Anonymität (**AN**) abzubilden, wird folgende S-förmige Transformation verwendet:
+
+$$
+\text{IC} = \frac{\text{AN}^2}{\text{AN}^2 + (1-\text{AN})^2}
+$$
+
+*Felt Responsibility* (**FR**) wird anschließend als abnehmende Funktion von IC modelliert und zusätzlich durch einen personenabhängigen Parameter *base\_resp* skaliert:
+
+$$
+\text{FR} = \text{base\_resp}\cdot (1-0.8\cdot \text{IC})^3
+$$
+
+Damit wird abgebildet, dass hohe IC mit geringerer Verantwortlichkeit einhergeht. Der Parameter *base\_resp* bildet interindividuelle Unterschiede in der Grundverantwortlichkeit ab und stellt eine bewusste Modellergänzung dar.
+
+### Aggregation zu State Disinhibition (\(\psi\))
+
+Die zentrale \(\psi\)-Funktion des Modells bildet *State Disinhibition* als lineare Kombination aus MOD (Disposition; G), FR (hemmender Einfluss) und CE (enthemmender Einfluss) ab, ergänzt um einen Interaktionsterm:
+
+$$
+\text{StateDis} = 0.2\cdot \text{MOD} - 0.3\cdot \text{FR} + 0.2\cdot \text{CE} - 0.1\cdot (\text{FR}\cdot \text{CE})
+$$
+
+Diese Spezifikation setzt die erwarteten Vorzeichen um: Höhere MOD- und CE-Werte erhöhen, höhere FR-Werte senken die Disinhibition. Der Interaktionsterm bildet zusätzlich ab, dass sich hemmende und enthemmende Einflüsse gegenseitig modulieren können.
+
+### Abbildung des beobachtbaren Outcomes (Curse)
+
+Zur Kopplung an ein beobachtbares Verhaltensmaß wird *StateDis* zunächst linear auf den Wertebereich \([0,1]\) transformiert und anschließend um eine Zufallskomponente ergänzt:
+
+$$
+\text{Curse} = \frac{\text{StateDis}+0.1}{1.3} + \varepsilon,\quad \varepsilon \sim \mathcal{N}(0,\,0.1)
+$$
+
+Anschließend wird *Curse* auf \([0,1]\) begrenzt, sodass es der Definition als Anteil entspricht (H; Appendix B/C). Die Zufallskomponente modelliert nicht erklärte interindividuelle Varianz sowie Mess- und Situationsrauschen und stellt ebenfalls eine explizite Modellannahme dar.
+
+### Visualisierung der funktionalen Beziehungen
+
+\begin{figure}[!htbp]
+\centering
+
+\begin{subfigure}[t]{0.82\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.16\textheight,keepaspectratio]{../plots/rel_IC_AN.png}
+\caption{Mit steigender Anonymität nimmt IC nichtlinear zu; der stärkste Zuwachs liegt im mittleren AN-Bereich.}
+\end{subfigure}
+
+\vspace{0.7em}
+
+\begin{subfigure}[t]{0.82\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.16\textheight,keepaspectratio]{../plots/rel_FR_IC.png}
+\caption{FR sinkt mit zunehmender IC stark und nichtlinear (hier bei base\_resp = 0.8).}
+\end{subfigure}
+
+\vspace{0.7em}
+
+\begin{subfigure}[t]{0.82\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.16\textheight,keepaspectratio]{../plots/rel_CAI_NIC.png}
+\caption{CAI steigt linear mit NIC: mehr Hinweisreize bedeuten mehr Sorge um den Eindruck.}
+\end{subfigure}
+
+\caption{Visualisierung der funktionalen Beziehungen I (vgl. Appendix C).}
+\label{fig:relationships}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+
+\begin{subfigure}[t]{0.82\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.16\textheight,keepaspectratio]{../plots/rel_CE_CAI.png}
+\caption{CE sinkt linear mit CAI: je stärker die Eindruckssorge, desto geringer die Ausdrucksbereitschaft.}
+\end{subfigure}
+
+\vspace{0.7em}
+
+\begin{subfigure}[t]{0.82\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.16\textheight,keepaspectratio]{../plots/rel_StateDis_MOD.png}
+\caption{Bei konstantem FR und CE steigt StateDis monoton mit MOD.}
+\end{subfigure}
+
+\vspace{0.7em}
+
+\begin{subfigure}[t]{0.82\textwidth}
+\centering
+\includegraphics[width=\linewidth,height=0.16\textheight,keepaspectratio]{../plots/rel_Curse_StateDis.png}
+\caption{Curse wird deterministisch als lineare Skalierung von StateDis auf den Wertebereich [0,1] abgebildet.}
+\end{subfigure}
+
+\caption{Visualisierung der funktionalen Beziehungen II (vgl. Appendix C).}
+\end{figure}
+
+## Evaluation des formalen Modells
+
+### Baseline-Simulation: Interaktionsmuster AN × NIC/cues
+
+Zur ersten Plausibilitätsprüfung wurde das Basismodell auf einem 3×3-Grid simuliert (AN ∈ {0, 0.5, 1}, NIC/cues ∈ {0, 0.5, 1}). Abbildung \ref{fig:sim_n900} zeigt die Zellmittelwerte von *Curse* (inkl. Konfidenzintervalle) für eine mittlere Stichprobengröße (n = 900). Das erwartete Muster wird im Basismodell klar reproduziert: *Curse* steigt mit AN (H1), sinkt mit NIC/cues (H2), und die Linien verlaufen nicht parallel, was auf den erwarteten Interaktionseffekt hinweist (H3). Der höchste *Curse*-Wert zeigt sich in der Kombination aus hoher Anonymität und niedriger Hinweisreiz-Dichte, also genau in der Konstellation hoher Dissociative Anonymity und hoher Invisibility.
+
+```{r}
+#| label: sim-baseline-plots
+#| echo: false
+#| message: false
+#| warning: false
+#| results: hide
+
+df_n900 <- run_grid_sim(900, seed = 900)
+p900 <- plot_interaction(df_n900, title = "Baseline simulation (n = 900)")
+ggsave("../plots/sim_interaction_n900.png", p900, width = 7, height = 4, dpi = 300)
+```
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{../plots/sim_interaction_n900.png}
+\caption{Baseline-Simulation (n = 900): Interaktionsplot der Zellmittelwerte von \textit{Curse} über Anonymität (AN), getrennt nach NIC/cues.}
+\label{fig:sim_n900}
+\end{figure}
+
+### Quantitative Prüfung der Baseline-Hypothesen
+
+Zur quantitativen Absicherung der visuellen Baseline-Befunde wurde das simulierte Basismodell zusätzlich mit einem linearen Modell der Form *Curse* ~ AN × NIC/cues ausgewertet. Da AN und NIC/cues im Simulationsdesign systematisch vorgegeben wurden, ist diese Auswertung als interner Modellcheck und nicht als empirische Inferenz zu verstehen. Erwartet wurden ein positiver Haupteffekt von AN (H1), ein negativer Haupteffekt von NIC/cues (H2) sowie ein negativer Interaktionseffekt AN × NIC/cues (H3). Inhaltlich entspricht dies der Annahme, dass Anonymität den *Curse*-Anteil erhöht, Hinweisreize ihn senken und der Effekt von Anonymität unter hoher Invisibility besonders stark ausfällt.
+
+```{r}
+#| label: sim-hypothesis-test
+#| echo: false
+#| message: false
+#| warning: false
+#| results: hide
+
+df_n90k <- run_grid_sim(90000, seed = 90000)
+
+m <- lm(bad_sentence_percentage ~ factor(anonymity) * factor(cues), data = df_n90k)
+anova(m)
+```
+
+Wie erwartet zeigte die Auswertung des großen 3×3-Datensatzes klare Haupt- und Interaktionseffekte im erwarteten Muster. Damit werden H1–H3 im Basismodell nicht nur visuell, sondern auch auf Ebene des linearen Modellchecks unterstützt.
+
+Zur ergänzenden Rohdatenvisualisierung wird für den 2×2-Extremvergleich die Verteilung von *Curse* in den vier Bedingungen aus Anonymität (AN: niedrig vs. hoch) und Hinweisreiz-Dichte (NIC/cues: niedrig vs. hoch) dargestellt.
+
+```{r}
+#| label: fig-boxplot-2x2
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-cap: "Simulierte Rohdaten im 2×2-Extremvergleich. Gezeigt ist die Verteilung von *Curse* für die vier Bedingungen aus Anonymität (AN: niedrig vs. hoch) und Hinweisreiz-Dichte (NIC/cues: niedrig vs. hoch). Niedrige NIC-Werte entsprechen hoher Invisibility."
+
+library(dplyr)
+library(ggplot2)
+
+df_2x2_raw <- df_n900 %>%
+  filter(anonymity %in% c(0, 1), cues %in% c(0, 1)) %>%
+  mutate(
+    condition = case_when(
+      anonymity == 0 & cues == 1 ~ "AN niedrig,\nNIC hoch",
+      anonymity == 0 & cues == 0 ~ "AN niedrig,\nNIC niedrig",
+      anonymity == 1 & cues == 1 ~ "AN hoch,\nNIC hoch",
+      anonymity == 1 & cues == 0 ~ "AN hoch,\nNIC niedrig",
+      TRUE ~ NA_character_
+    ),
+    condition = factor(
+      condition,
+      levels = c(
+        "AN niedrig,\nNIC hoch",
+        "AN niedrig,\nNIC niedrig",
+        "AN hoch,\nNIC hoch",
+        "AN hoch,\nNIC niedrig"
+      )
+    )
+  )
+
+ggplot(df_2x2_raw, aes(x = condition, y = bad_sentence_percentage)) +
+  geom_boxplot(
+    width = 0.65,
+    outlier.shape = NA,
+    fill = "grey85",
+    color = "black"
+  ) +
+  geom_jitter(width = 0.12, alpha = 0.35, size = 1) +
+  labs(
+    x = NULL,
+    y = "Curse"
+  ) +
+  theme_classic(base_size = 11)
+```
+
+In @fig-boxplot-2x2 zeigt sich das erwartete Muster: Die höchsten *Curse*-Werte treten in der Bedingung **AN hoch, NIC niedrig** auf, während die Referenzbedingung **AN niedrig, NIC hoch** die niedrigsten Werte zeigt. Damit ist der Extremkontrast auch auf Ebene der simulierten Einzelbeobachtungen sichtbar.
+
+### Explorative Robustheitsanalyse: Assumption Tournament × UTOS-in-code
+
+Über die Baseline hinaus wurde geprüft, ob die Reproduktion des Zielphänomens von einzelnen Modellannahmen abhängt. Dazu wurde ein **Assumption Tournament** für die Beziehung *Concern about impression on others* → *Courage to express oneself* (CAI → CE) durchgeführt. Verglichen wurden drei plausible Spezifikationen dieses Zusammenhangs: eine lineare, eine abgeschwächt lineare und eine nichtlineare bzw. thresholdartige Variante.
+
+Ergänzend wurde die Generalisierbarkeit des Musters exemplarisch im Sinne des UTOS-Frameworks als **UTOS-in-code** operationalisiert. Dabei wurden **Units** über unterschiedliche Verteilungen der Grundverantwortlichkeit (*base_resp*) variiert und **Settings** über die Stabilität der Hinweisreiz-Dichte modelliert (geringes vs. hohes Cue-Jitter). Zusätzlich wurde die Dispositionsvariable MOD in einem lowMOD- und einem highMOD-Szenario variiert, um zu prüfen, ob das Basismuster auch bei unterschiedlichen allgemeinen Disinhibitionstendenzen erhalten bleibt.
+
+Als kompaktes Evaluationsmaß wurde in diesem Robustheitsblock ein virtuelles 2×2-Extremvergleichsdesign verwendet. Verglichen wurden die mittleren *Curse*-Werte der extremen Bedingung hoher Anonymität und hoher Invisibility mit der Referenzbedingung niedriger Anonymität und niedriger Invisibility. Das Zielphänomen wurde dabei über die Mittelwertsdifferenz \(\Delta = M_{HH} - M_{LL}\) quantifiziert; höhere Werte zeigen eine stärkere Reproduktion des Zielphänomens an.
+
+```{r}
+#| label: eigen-tournament-utos-run
+#| include: false
+#| message: false
+#| warning: false
+
+source("../simulation/01-functions.R")
+stopifnot("ce_variant" %in% names(formals(curse_function)))
+source("../simulation/07-eigenleistung_tournament_utos.R")
+```
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.98\textwidth]{../plots/eigenleistung_tournament_utos.png}
+\caption{Eigenleistung: Robustheitsanalyse via Assumption Tournament × UTOS-in-code-Szenarien. Der Effekt wird über \(\Delta = M_{HH} - M_{LL}\) quantifiziert; höhere Werte zeigen eine stärkere Reproduktion des Zielphänomens an. Die Panels vergleichen alternative Formalisierungen des CAI→CE-Zusammenhangs; die Linien vergleichen MOD-Szenarien (lowMOD vs. highMOD) über UTOS-Szenarien (Units × Settings).}
+\label{fig:eigen-tournament-utos}
+\end{figure}
+
+Abbildung \ref{fig:eigen-tournament-utos} zeigt, dass der Extremkontrast über alle geprüften Annahmen- und UTOS-Konfigurationen hinweg positiv bleibt, auch wenn seine Größe variiert. Das spricht dafür, dass die Phänomenreproduktion nicht bloß ein Artefakt einer einzelnen Funktionsform oder eines einzelnen Kontext-Settings ist, sondern unter mehreren plausiblen Modellvarianten erhalten bleibt. Zugleich zeigt die Variation der Effektstärken, dass die Stärke der Reproduktion sensitiv auf Modellierungsentscheidungen und Kontextannahmen reagiert. Die Robustheitsanalyse stützt daher weniger eine punktgenaue Schätzung der Effektgröße als vielmehr die strukturelle Plausibilität des formalisierten Teilmodells.
+
+## Diskussion: Meta-Reflektion
+
+Die Formalisierung des Online-Disinhibition-Effekts (Suler, 2004) hat mich insgesamt positiv überrascht. Zu Beginn hatte ich deutliche Zweifel, ob ich den methodischen Anforderungen des Projekts – VAST, Tabellen, Simulation und reproduzierbarer Workflow – gewachsen bin. Im Verlauf wurde jedoch klar, dass die einzelnen Schritte sinnvoll aufeinander aufbauen und der Prozess gerade durch die iterative Logik (VAST → Tabellen → Funktionen → Simulation → Evaluation) zunehmend greifbar wird. Hilfreich waren dabei sowohl die offene Fehlerkultur im Seminar als auch die Zusammenarbeit in der Gruppe.
+
+Gleichzeitig zeigte sich, dass Sulers Originaltext zwar ein guter Ausgangspunkt ist, für eine Formalisierung aber in Teilen zu vage bleibt. Zentrale Begriffe sind eher narrativ beschrieben als präzise definiert, sodass ein wesentlicher Teil der Arbeit darin bestand, Konstrukte zu schärfen und operationalisierbar zu machen, etwa Anonymität als kontinuierliche Größe oder Invisibility über die Anzahl interpersonaler Hinweisreize. Auch die Literaturrecherche war ambivalent: Für einige Zusammenhänge ließ sich Evidenz finden, insgesamt zeigte sich jedoch eine heterogene Befundlage, insbesondere für Anonymity. Hinzu kommt, dass viele Studien eher *perceived anonymity* als objektive Anonymität erfassen, was die Vergleichbarkeit einschränkt. Deshalb waren an mehreren Stellen begründete Zusatzannahmen nötig, um das Modell überhaupt formal spezifizieren und simulieren zu können.
+
+Am schwierigsten war für mich die Balance zwischen wissenschaftlicher Plausibilität und pragmatischer Modellierbarkeit. Funktionsformen müssen einfach genug sein, um interpretierbar zu bleiben, aber zugleich präzise genug, um ein prüfbares System zu ergeben. Genau darin lag aber auch der größte Lerngewinn: Formalisierung macht theoretische und messmethodische Lücken sichtbar und zwingt dazu, implizite Annahmen explizit zu machen. Aus dem Projekt nehme ich deshalb nicht nur konkrete technische Kompetenzen mit – etwa Quarto, GitHub und reproduzierbares Arbeiten –, sondern vor allem ein besseres Verständnis dafür, wie psychologische Theorien in ein transparentes und evaluierbares Modell überführt werden können.
+
+# Literaturverzeichnis
+::: {#refs}
+:::
+\clearpage
+# Appendix
+
+```{r}
+#| label: appendix-setup
+#| include: false
+#| message: false
+#| warning: false
+
+library(readr)
+library(dplyr)
+library(stringr)
+library(knitr)
+library(kableExtra)
+
+read_csv_de <- function(path, skip = 0) {
+  escape_latex_text <- function(x) {
+    x <- ifelse(is.na(x), "", as.character(x))
+    x <- str_replace_all(x, fixed("\\"), "\\\\textbackslash{}")
+    x <- str_replace_all(x, fixed("&"), "\\\\&")
+    x <- str_replace_all(x, fixed("%"), "\\\\%")
+    x <- str_replace_all(x, fixed("_"), "\\\\_")
+    x <- str_replace_all(x, fixed("#"), "\\\\#")
+    x <- str_replace_all(x, fixed("^"), "\\\\textasciicircum{}")
+    x <- str_replace_all(x, fixed("~"), "\\\\textasciitilde{}")
+    x
+  }
+
+  df <- read_delim(
+    path,
+    delim = ";",
+    skip = skip,
+    locale = locale(encoding = "UTF-8"),
+    show_col_types = FALSE,
+    progress = FALSE
+  )
+
+  df <- df %>%
+    mutate(across(everything(), escape_latex_text))
+
+  df <- df[, colSums(df != "") > 0, drop = FALSE]
+  df
+}
+
+make_landscape <- function(tbl, add_page_break_after = TRUE) {
+  cat("\\clearpage\n")
+  cat("\\begin{landscape}\n")
+  cat(as.character(tbl))
+  cat("\n\\end{landscape}\n")
+  if (add_page_break_after) cat("\\clearpage\n")
+}
+```
+
+## Appendix A: Construct Source Table {#app-a}
+
+```{r}
+#| label: app-a
+#| echo: false
+#| results: asis
+
+dfA <- read_csv_de("construct source table.csv", skip = 0)
+
+if ("Quote" %in% names(dfA)) {
+  dfA$Quote <- linebreak(dfA$Quote)
+}
+
+tabA <- kbl(
+  dfA,
+  format = "latex",
+  booktabs = TRUE,
+  longtable = TRUE,
+  escape = FALSE,
+  caption = "Appendix A. Construct Source Table."
+) %>%
+  kable_styling(
+    latex_options = c("repeat_header"),
+    font_size = 7,
+    full_width = FALSE
+  ) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, width = "3.2cm") %>%
+  column_spec(2, width = "9.2cm") %>%
+  column_spec(ncol(dfA), width = "1.1cm")
+
+make_landscape(tabA)
+```
+
+## Appendix B: Variable Table {#app-b}
+
+```{r}
+#| label: app-b
+#| echo: false
+#| results: asis
+
+dfB <- read_csv_de("variable table.csv", skip = 0)
+
+if ("Anchors" %in% names(dfB)) {
+  dfB$Anchors <- linebreak(dfB$Anchors)
+}
+
+tabB <- kbl(
+  dfB,
+  format = "latex",
+  booktabs = TRUE,
+  longtable = TRUE,
+  escape = FALSE,
+  caption = "Appendix B. Variable Table."
+) %>%
+  kable_styling(
+    latex_options = c("repeat_header"),
+    font_size = 8,
+    full_width = FALSE
+  ) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, width = "3.4cm") %>%
+  column_spec(2, width = "2.0cm") %>%
+  column_spec(3, width = "2.2cm") %>%
+  column_spec(4, width = "2.8cm") %>%
+  column_spec(5, width = "2.0cm") %>%
+  column_spec(6, width = "9.5cm")
+
+make_landscape(tabB)
+```
+
+## Appendix C: Relationships Table {#app-c}
+
+```{r}
+#| label: app-c
+#| echo: false
+#| results: asis
+
+dfC <- read_csv_de("relationships table.csv", skip = 0)
+
+names(dfC) <- trimws(names(dfC))
+names(dfC)[names(dfC) == "Function to compute the output variable"] <- "Function"
+names(dfC)[names(dfC) == "To what extent derived from theory?a"] <- "Derived from theory?"
+names(dfC)[names(dfC) == "To what extent empirically backed?"] <- "Evidence"
+
+if ("Function" %in% names(dfC)) {
+  dfC$Function <- linebreak(dfC$Function)
+}
+if ("Comment" %in% names(dfC)) {
+  dfC$Comment <- linebreak(dfC$Comment)
+}
+if ("Derived from theory?" %in% names(dfC)) {
+  dfC$`Derived from theory?` <- linebreak(dfC$`Derived from theory?`)
+}
+if ("Evidence" %in% names(dfC)) {
+  dfC$Evidence <- linebreak(dfC$Evidence)
+}
+
+tabC <- kbl(
+  dfC,
+  format = "latex",
+  booktabs = TRUE,
+  longtable = TRUE,
+  escape = FALSE,
+  caption = "Appendix C. Relationship Table."
+) %>%
+  kable_styling(
+    latex_options = c("repeat_header"),
+    font_size = 7,
+    full_width = FALSE
+  ) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, width = "1.8cm") %>%
+  column_spec(2, width = "5.0cm") %>%
+  column_spec(3, width = "4.4cm") %>%
+  column_spec(4, width = "4.2cm") %>%
+  column_spec(5, width = "4.4cm")
+
+make_landscape(tabC, add_page_break_after = FALSE)
+```

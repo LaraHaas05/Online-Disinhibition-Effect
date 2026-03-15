@@ -1,0 +1,8 @@
+﻿Output variable;Function to compute the output variable;Comment;To what extent derived from theory?a;To what extent empirically backed?
+IC;IC = (AN²) / (AN² + (1−AN)²);positive, S-shaped relationship;Not based on focal theory, but rather on common sense or other theories;indications, but no robust empirical evidence
+FR;FR = base response × (1 − 0.8 × IC)³;base resp: base responsibility, included as model parameter, describes a person's trait responsibility, varies inter-individually ;Not based on focal theory, but rather on common sense or other theories;indications, but no robust empirical evidence
+CAI;CAI = NIC;positive linear relationship ;Derived from theory ;
+;;interpersonal cues as independent variable;;
+CE;CE = - CAI + 1;negative linear relationship ;Derived from theory;
+StateDis;StateDis = 0.2 × MOD − 0.3 × FR + 0.2 × CE − 0.1 × FE × CE;;Loosely inspired by theory, with added elements based on common sense and other theories;no evidence for this specific relationship
+Curse;Curse = (StateDis + 0.1) / 1.3;+ rnorm(length(StateDis), mean = 0, sd = 0.1) to add random noise/interpersonal variance;Not based on focal theory, but rather on common sense or other theories;no evidence for this specific relationship

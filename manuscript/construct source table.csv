@@ -1,0 +1,13 @@
+﻿Reference;Quote;Extracted element (Concept or relationship);"Element type
+(Concept or Relationship)";Rel. type (n, p, i, r, c, …);Short name / associated concept;Comment;ID
+Suler, J. (2004);“people say and do things in cyberspace that they wouldn’t ordinarily say and do in the face-to-face world. They loosen up, feel less restrained, and express themselves more openly.”;State Disinhibition;C;n;StateDis;;A
+Suler, J. (2004);“When people have the opportunity to separate their actions online from their in-person lifestyle and identity, they feel less vulnerable about self-disclosing and acting out. [...] The online self becomes a compartmentalized self.”;Anonymity;C;n;AN;characteristic of cyberspaces;B1
+;;Identity Compartmentalisation;C;n;IC;;B2
+;;Felt Responsibility;C;n;FR;;B3
+;;Dissociative Anonymity;HOC;n;DisAn;;B4
+Suler, J. (2004);“In many online environments, especially those that are text-driven, people cannot see each other. When people visit web sites, message boards, and even some chat rooms, other people may not even know they are present at all”;Invisibility;HOC;n;Inv;characteristic of cyberspaces;C1
+Suler, J. (2004);“Avoiding eye contact and face-to-face visibility disinhibits people. Text communication offers a built-in opportunity to keep one’s eyes averted.”;Number of interpersonal cues;C;n;NIC;;E
+Suler, J. (2004);“People don’t have to worry about how they look or sound when they type a message. They don’t have to worry about how others look or sound in response to what they say. Seeing a frown, a shaking head, a sigh, a bored expression, and many other subtle and not so subtle signs of disapproval or indifference can inhibit what people are willing to express.”;Concern about impression on others;C;n;CAI;;D
+Suler, J. (2004);“This invisibility gives people the courage to go places and do things that they otherwise wouldn’t”;Courage to express oneself;;;CE;;F
+Stuart and Scott, 2021;“Using two studies with unique samples, the Measure of Online Disinhibition (MOD), was developed as a comprehensive and valence free instrument for assessing self-perceptions of psychological and behavioral change in the online as compared to the offline environment.”;Measure of online disinhibition;C;n;MOD;trait online-disinhibition;G
+;;Percentage of curse words;C;n;Curse;Percentage of sentences that contain at least one curse word;H
