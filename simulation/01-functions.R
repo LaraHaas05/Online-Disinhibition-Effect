@@ -74,8 +74,18 @@ CAI_function(an)
 #' @return The courage to express oneself for the given concern values,
 #'         on a scale from 0 to 1.
 
-CE_function <- function(concern) {
-  courage <- concern * (-1) + 1
+CE_function <- function(concern, variant = c("linear", "linear_weak", "threshold")) {
+  variant <- match.arg(variant)
+  
+  if (variant == "linear") {
+    courage <- 1 - concern
+  } else if (variant == "linear_weak") {
+    courage <- 1 - 0.7 * concern
+  } else if (variant == "threshold") {
+    # Nonlinear/threshold-like: concern around .5 is the "tipping" zone
+    a <- 6
+    courage <- 1 - plogis(a * (concern - 0.5))
+  }
   return(courage)
 }
 
@@ -119,17 +129,19 @@ SD_function <- function(feltresp, courage, MOD) {
 #' @return The percentage of sentences containing at least one curse word for the given
 #'         parameters, as values on a scale from 0 to 1.
 
-curse_function <- function(anonymity, cues, MOD, base_resp) {
+curse_function <- function(anonymity, cues, MOD, base_resp, ce_variant = "linear") {
   comp <- IC_function(anonymity)
   feltresp <- FR_function(comp, base_resp)
   concern <- CAI_function(cues)
-  courage <- CE_function(concern)
+  courage <- CE_function(concern, variant = ce_variant)
   state_dis <- SD_function(feltresp, courage, MOD)
+  
   bad_sentence_percentage <- (state_dis + 0.1)/1.3 + rnorm(length(state_dis), mean = 0, sd = 0.1)
   bad_sentence_percentage[bad_sentence_percentage > 1] <- 1
   bad_sentence_percentage[bad_sentence_percentage < 0] <- 0
   return(bad_sentence_percentage)
 }
+
 
 library(ggplot2)
 df <- expand.grid(

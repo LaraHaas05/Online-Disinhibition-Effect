@@ -1,10 +1,10 @@
 ﻿Construct;Short Name;Scale level;exogen/endogen;Range/Values;Anchors
-Anonymity;AN;continous;exogen;"[0;1]";"0 = User is fully known during the interaction; 1 = Full anonymity where the user remains unknowable during the interaction"
-Identity compartmentalization;IC;continous;endogen;"[0;1]";"0 = online- and offline-self are completely identical; 1 = feeling like ‘those online behaviors “aren’t me at all.”’ (Suler, 2004)"
-Felt Responsibility;FR;continous;endogen;"[0;1]";"0 = one feels no responsibility for one’s actions, temporary suspension of moral cognitive processes; 1 = maximal feeling of responsibility for one’s actions"
-Number of interpersonal cues;NIC;continous;exogen;"[0;1]";"0 = text-only, minimal interpersonal cues; 1 = audio, video and nonverbal feedback, maximal nonverbal, paraverbal and verbal cues"
-Concern about impression on others;CAI;continous;endogen;"[0;1]";0 = not concerned about impression on others, 0.3 = mildly concerned about impression on others, 1 = maximal concerned about impression on others
-Courage to express oneself;CE;continous ;endogen;"[0;1]";"0 = maximal inhibition and fear of expressing oneself; 1 = no fear of expressing oneself"
-Measure of online disinhibition;MOD;continous;exogen;"[1;5]";"5-point likert scale; 1 = strongly disagree to 5 = strongly agree for the items of the MOD"
-State Disinhibition;StateDis;continous;endogen;"[-0.1;1.2]";" -0.1 = no inclination to “say and do things in cyberspace that they wouldn’t ordinarily say and do in the face-to-face world” (Suler, 2004); 1.2 = maximal inclination toward such behavior"
-Percentage of curse words;Curse;continous;endogen;"[0;1]";"0 = no sentence containing any curse word; 1 = every sentence contains at least one curse word"
+Anonymity;AN;continuous;exogen;"[0;1]";"0 = User is fully known during the interaction; 1 = Full anonymity where the user remains unknowable during the interaction"
+Identity compartmentalization;IC;continuous;endogen;"[0;1]";"0 = online- and offline-self are completely identical; 1 = feeling like ‘those online behaviors “aren’t me at all.”’ (Suler, 2004)"
+Felt Responsibility;FR;continuous;endogen;"[0;1]";"0 = one feels no responsibility for one’s actions, temporary suspension of moral cognitive processes; 1 = maximal feeling of responsibility for one’s actions"
+Number of interpersonal cues;NIC;continuous;exogen;"[0;1]";"0 = text-only, minimal interpersonal cues; 1 = audio, video and nonverbal feedback, maximal nonverbal, paraverbal and verbal cues"
+Concern about impression on others;CAI;continuous;endogen;"[0;1]";0 = not concerned about impression on others, 0.3 = mildly concerned about impression on others, 1 = maximal concerned about impression on others
+Courage to express oneself;CE;continuous ;endogen;"[0;1]";"0 = maximal inhibition and fear of expressing oneself; 1 = no fear of expressing oneself"
+Measure of online disinhibition;MOD;continuous;exogen;"[1;5]";"5-point likert scale; 1 = strongly disagree to 5 = strongly agree for the items of the MOD"
+State Disinhibition;StateDis;continuous;endogen;"[-0.1;1.2]";" -0.1 = no inclination to “say and do things in cyberspace that they wouldn’t ordinarily say and do in the face-to-face world” (Suler, 2004); 1.2 = maximal inclination toward such behavior"
+Percentage of curse words;Curse;continuous;endogen;"[0;1]";"0 = no sentence containing any curse word; 1 = every sentence contains at least one curse word"
